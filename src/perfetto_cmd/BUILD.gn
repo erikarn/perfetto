@@ -24,6 +24,7 @@ executable("perfetto") {
     "../../gn:default_deps",
   ]
   sources = [ "main.cc" ]
+  ldflags = [ "-lpthread" ]
 }
 
 # Tool to finalize long running traces.
@@ -38,6 +39,7 @@ executable("trigger_perfetto") {
     "../../gn:default_deps",
   ]
   sources = [ "trigger_perfetto_main.cc" ]
+  ldflags = [ "-lpthread" ]
 }
 
 # Contains all the implementation but not the main() entry point. This target
@@ -76,6 +78,7 @@ source_set("perfetto_cmd") {
     deps += [ "../android_internal:lazy_library_loader" ]
     sources += [ "perfetto_cmd_android.cc" ]
   }
+  ldflags = [ "-lpthread" ]
 }
 
 source_set("bugreport_path") {
@@ -85,6 +88,7 @@ source_set("bugreport_path") {
     "../../include/perfetto/base",
     "../../include/perfetto/ext/base",
   ]
+  ldflags = [ "-lpthread" ]
 }
 
 source_set("trigger_perfetto_cmd") {
@@ -100,6 +104,7 @@ source_set("trigger_perfetto_cmd") {
     "../tracing/ipc/producer",
   ]
   sources = [ "trigger_perfetto.cc" ]
+  ldflags = [ "-lpthread" ]
 }
 
 source_set("trigger_producer") {
@@ -112,6 +117,7 @@ source_set("trigger_producer") {
     "../base",
     "../tracing/ipc/producer",
   ]
+  ldflags = [ "-lpthread" ]
 }
 
 perfetto_proto_library("protos_@TYPE@") {
@@ -138,4 +144,5 @@ perfetto_unittest_source_set("unittests") {
     "config_unittest.cc",
     "packet_writer_unittest.cc",
   ]
+  ldflags = [ "-lpthread" ]
 }

@@ -23,6 +23,7 @@ perfetto_host_executable("protozero_plugin") {
     "../../../gn:protoc_lib",
     "../../../src/base",
   ]
+  ldflags = [ "-lpthread" ]
 }
 
 # The plugin that generates standalone C++ objects from protos (xxx.gen.h).
@@ -35,6 +36,7 @@ perfetto_host_executable("cppgen_plugin") {
     "../../../gn:protoc_lib",
     "../../../src/base",
   ]
+  ldflags = [ "-lpthread" ]
 }
 
 # The plugin that generates standalone C macros and function from protos
@@ -46,6 +48,7 @@ perfetto_host_executable("protozero_c_plugin") {
     "../../../gn:protoc_lib",
     "../../../src/base",
   ]
+  ldflags = [ "-lpthread" ]
 }
 
 # The plugin that generates standalone Rust macros and function from protos

@@ -42,6 +42,7 @@ source_set("producer") {
   } else {
     deps += [ "../../../ipc:client" ]
   }
+  ldflags = [ "-lpthread" ]
 }
 
 # Relay port client implementation, used by the relay service.
@@ -60,4 +61,5 @@ source_set("relay") {
   } else {
     deps += [ "../../../ipc:client" ]
   }
+  ldflags = [ "-lpthread" ]
 }

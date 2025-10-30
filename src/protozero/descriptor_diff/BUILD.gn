@@ -23,6 +23,7 @@ perfetto_host_executable("protozero_descriptor_diff") {
     "../../base",
     "../../base:version",
   ]
+  ldflags = [ "-lpthread" ]
 }
 
 perfetto_unittest_source_set("unittests") {
