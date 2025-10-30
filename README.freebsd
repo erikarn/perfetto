@@ -1,0 +1,41 @@
+building on freebsd notes
+
+* needs a python3 symlink before you can run tools/install-build/deps
+* there's a bunch of python3 deps, maybe should build this in a venv
+  next time?
+* uses ninja + gn to build
+  $ pkg install ninja gn
+* tools/run_buildtools_binary.py doesn't seem to find 'gn', dunno why
+
+Time to config + build
+
+tools/gn args out/freebsd
+
+# target_os = "freebsd"
+# target_cpu = "x86_64"
+is_clang = true
+is_debug = true
+is_hermetic_clang = false
+is_system_compiler = true
+
+ar = "/usr/bin/ar"
+cc = "/usr/bin/cc"
+cxx = "/usr/bin/c++"
+# linker = "" - passed to -fuse-id=
+linker = ""
+
+===
+
+Then to build
+
+$ python3 tools/ninja -C out/freebsd perfetto traced trace_processor_shell
+
+
+
+===
+
+TODO:
+
+* CLOCK_MONOTONIC vs CLOCK_MONOTONIC_RAW, sigh
+* missing a lot of -lpthread everywhere; need to figure out how to fix
+  that without sprinkling ldflags = [ "-lpthread" ] everywhere!
