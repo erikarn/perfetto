@@ -59,7 +59,7 @@ tools/gn args out/android
 This will open an editor to customize the GN args. Enter:
 
 ```python
-# Set only when building for Android, omit when building for linux, mac or win.
+# Set only when building for Android, omit when building for linux, mac, freebsd or win.
 target_os = "android"
 target_cpu = "arm" / "arm64" / "x64"
 
@@ -246,7 +246,7 @@ target_sysroot = "/path/to/sysroot"
 target_triplet = "aarch64-linux-gnu"  # Or any other supported triplet.
 ```
 
-For more details see the [Using cutom toolchains](#custom-toolchain) section
+For more details see the [Using custom toolchains](#custom-toolchain) section
 below.
 
 ## Build configurations
@@ -256,16 +256,19 @@ most of the supported configurations.
 
 The following [GN args][gn-quickstart] are supported:
 
-`target_os = "android" | "linux" | "mac"`:
+`target_os = "android" | "linux" | "mac" | "freebsd"`:
 
 Defaults to the current host, set "android" to build for Android.
 
-`target_cpu = "arm" | "arm64" | "x64"`
+`target_cpu = "arm" | "arm64" | "x64" | "x86_64"`
 
 Defaults to `"arm"` when `target_os` == `"android"`, `"x64"` when targeting the
 host. 32-bit host builds are not supported.
 Note: x64 here really means x86_64. This is to keep it consistent with
 Chromium's choice, which in turn follows Windows naming convention.
+
+(For now the FreeBSD stuff uses x86_64; I'll have to figure that out
+before submtiting.)
 
 `is_debug = true | false`
 

@@ -189,7 +189,7 @@ AndroidPowerDataSource::AndroidPowerDataSource(
   uint64_t boottime_bits =
       static_cast<uint64_t>(base::GetBootTimeNs().count()) &
       0x7FFFFFFFFULL;  // Lower 35 bits (max value of 34,359,738,367 ns)
-  uint64_t thread_bits = static_cast<uint64_t>(base::GetThreadId()) << 35;
+  uint64_t thread_bits = reinterpret_cast<uint64_t>(base::GetThreadId()) << 35;
 
   session_uuid_ = boottime_bits | thread_bits;
   using protos::pbzero::AndroidPowerConfig;

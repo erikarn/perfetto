@@ -114,6 +114,8 @@ declare_args() {
     _target_triplet = target_triplet
   } else if (!is_cross_compiling) {
     _target_triplet = ""
+  } else if (target_os == "freebsd" && target_cpu == "x86_64") {
+    _target_triplet = "x86_64-unknown-freebsd"
   } else if (target_os == "mac" && target_cpu == "x64") {
     _target_triplet = "x86_64-apple-darwin"
   } else if (target_os == "mac" && target_cpu == "x86") {

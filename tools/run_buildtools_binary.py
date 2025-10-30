@@ -38,6 +38,8 @@ def run_buildtools_binary(args):
     ext = '.exe'
   elif sys_name == 'darwin':
     os_dir = 'mac'
+  elif sys_name == 'freebsd':
+    os_dir = 'freebsd'
   elif sys_name == 'linux':
     os_dir = 'linux64'
   else:
@@ -52,6 +54,8 @@ def run_buildtools_binary(args):
   exe_path = os.path.join(ROOT_DIR, 'third_party', cmd, cmd) + ext
   if not os.path.exists(exe_path):
     exe_path = os.path.join(ROOT_DIR, 'buildtools', os_dir, cmd) + ext
+  if not os.path.exists(exe_path) and sys_name == "freebsd":
+    exe_path = os.path.join("/usr/local/bin", cmd) + ext
 
   if sys_name == 'windows':
     # execl() behaves oddly on Windows: the spawned process doesn't seem to

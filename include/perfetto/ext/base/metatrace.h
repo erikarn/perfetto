@@ -133,7 +133,9 @@ struct Record {
   uint16_t timestamp_ns_high = 0;
   uint32_t timestamp_ns_low = 0;
 
-  uint32_t thread_id = 0;
+  // [adrian] shouldn't this be 64 bit?
+  uint64_t thread_id = 0;
+  //uint32_t thread_id = 0;
 
   union {
     // Only one of the two elements can be zero initialized, clang complains
@@ -264,7 +266,7 @@ inline void TraceCounter(uint32_t tag, uint16_t id, int32_t value) {
   if (PERFETTO_LIKELY((enabled_tags & tag) == 0))
     return;
   Record* record = RingBuffer::AppendNewRecord();
-  record->thread_id = static_cast<uint32_t>(base::GetThreadId());
+  record->thread_id = reinterpret_cast<uint64_t>(base::GetThreadId());
   record->set_timestamp(TraceTimeNowNs());
   record->counter_value = value;
   record->type_and_id.store(Record::kTypeCounter | id,
@@ -279,7 +281,7 @@ class ScopedEvent {
       return;
     event_id_ = event_id;
     record_ = RingBuffer::AppendNewRecord();
-    record_->thread_id = static_cast<uint32_t>(base::GetThreadId());
+    record_->thread_id = reinterpret_cast<uint64_t>(base::GetThreadId());
     record_->set_timestamp(TraceTimeNowNs());
   }
 

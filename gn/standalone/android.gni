@@ -21,6 +21,8 @@ declare_args() {
     android_host = "linux-x86_64"
   } else if (host_os == "mac") {
     android_host = "darwin-x86_64"
+  } else if (host_os == "freebsd") {
+    android_host = "freebsd-x86_64"
   } else {
     android_host = "UNSUPPORTED_ON_WINDOWS"
   }
