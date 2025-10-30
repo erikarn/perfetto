@@ -28,7 +28,7 @@ linker = ""
 
 Then to build
 
-$ python3 tools/ninja -C out/freebsd perfetto traced trace_processor_shell
+$ python3 tools/ninja -C out/freebsd perfetto traced trace_processor_shell traced_relay traced_probes
 
 
 
