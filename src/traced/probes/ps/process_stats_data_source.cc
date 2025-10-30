@@ -239,7 +239,7 @@ void ProcessStatsDataSource::WriteAllProcesses() {
         record_process_age_ ? ReadProcPidFile(pid, "stat") : "";
     bool namespaced_process = WriteProcess(pid, pid_status, pid_stat);
 
-    base::StackString<128> task_path("/proc/%d/task", pid);
+    base::StackString<128> task_path("/compat/linux/proc/%d/task", pid);
     base::ScopedDir task_dir(opendir(task_path.c_str()));
     if (!task_dir)
       continue;
@@ -442,7 +442,8 @@ void ProcessStatsDataSource::WriteDetailedThread(
 }
 
 const char* ProcessStatsDataSource::GetProcMountpoint() {
-  static constexpr char kDefaultProcMountpoint[] = "/proc";
+  printf("%s: called\n", __func__);
+  static constexpr char kDefaultProcMountpoint[] = "/compat/linux/proc";
   return kDefaultProcMountpoint;
 }
 
@@ -455,7 +456,7 @@ base::ScopedDir ProcessStatsDataSource::OpenProcDir() {
 
 std::string ProcessStatsDataSource::ReadProcPidFile(int32_t pid,
                                                     const std::string& file) {
-  base::StackString<128> path("/proc/%" PRId32 "/%s", pid, file.c_str());
+  base::StackString<128> path("/compat/linux/proc/%" PRId32 "/%s", pid, file.c_str());
   std::string contents;
   contents.reserve(4096);
   if (!base::ReadFile(path.c_str(), &contents))

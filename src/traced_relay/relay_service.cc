@@ -38,6 +38,7 @@
 
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) || \
     PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) ||   \
+    PERFETTO_BUILDFLAG(PERFETTO_OS_FREEBSD) ||   \
     PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE)
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -49,6 +50,7 @@
 // Non-QNX include statements
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) ||           \
     PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX_BUT_NOT_QNX) || \
+    PERFETTO_BUILDFLAG(PERFETTO_OS_FREEBSD) || \
     PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE)
 #include <sys/syscall.h>
 #endif
@@ -393,12 +395,13 @@ std::string RelayService::GetMachineIdHint(
 
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) || \
     PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) ||   \
+    PERFETTO_BUILDFLAG(PERFETTO_OS_FREEBSD) ||   \
     PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE)
   auto get_pseudo_boot_id = []() -> std::string {
     base::FnvHasher hasher;
     // Generate a pseudo-unique identifier for the current machine.
     // Source 1: system boot timestamp from the creation time of /dev inode.
-#if PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE)
+#if PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE) || PERFETTO_BUILDFLAG(PERFETTO_OS_FREEBSD)
     // Mac or iOS, just use stat(2).
     const char* dev_path = "/dev";
     struct stat stat_buf{};

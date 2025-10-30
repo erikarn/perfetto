@@ -29,6 +29,7 @@ executable("traced_relay") {
     "../tracing/ipc:default_socket",
   ]
   sources = [ "relay_service_main.cc" ]
+  ldflags = [ "-lpthread" ]
 }
 
 source_set("lib") {

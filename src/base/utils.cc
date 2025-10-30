@@ -27,6 +27,7 @@
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) ||   \
     PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) || \
     PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE) ||   \
+    PERFETTO_BUILDFLAG(PERFETTO_OS_FREEBSD) || \
     PERFETTO_BUILDFLAG(PERFETTO_OS_FUCHSIA)
 #include <limits.h>
 #include <stdlib.h>  // For _exit()
@@ -176,6 +177,7 @@ uint32_t GetSysPageSizeSlowpath() {
 #elif PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE)
   page_size = static_cast<uint32_t>(vm_page_size);
 #else
+  /* XXX TODO: freebsd */
   page_size = 4096;
 #endif
 
@@ -208,6 +210,7 @@ void MaybeReleaseAllocatorMemToOS() {
 uid_t GetCurrentUserId() {
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) ||   \
     PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) || \
+    PERFETTO_BUILDFLAG(PERFETTO_OS_FREEBSD) || \
     PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE)
   return geteuid();
 #else
@@ -238,6 +241,7 @@ void UnsetEnv(const std::string& key) {
 void Daemonize(std::function<int()> parent_cb) {
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) ||   \
     PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) || \
+    PERFETTO_BUILDFLAG(PERFETTO_OS_FREEBSD) || \
     (PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE) &&  \
      !PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE_TVOS))
   Pipe pipe = Pipe::Create(Pipe::kBothBlock);
@@ -303,6 +307,7 @@ std::string GetCurExecutablePath() {
   auto len = ::GetModuleFileNameA(nullptr /*current*/, buf, sizeof(buf));
   self_path = std::string(buf, len);
 #else
+  /* XXX TODO: freebsd */
   PERFETTO_FATAL(
       "GetCurExecutableDir() not implemented on the current platform");
 #endif

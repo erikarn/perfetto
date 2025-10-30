@@ -836,7 +836,7 @@ base::Status TraceProcessorImpl::DisableAndReadMetatrace(
     clock->set_timestamp(ts);
   }
 
-  auto tid = static_cast<uint32_t>(base::GetThreadId());
+  auto tid = reinterpret_cast<uint64_t>(base::GetThreadId());
   base::FlatHashMap<std::string, uint64_t> interned_strings;
   metatrace::DisableAndReadBuffer(
       [&trace, &interned_strings, tid](metatrace::Record* record) {

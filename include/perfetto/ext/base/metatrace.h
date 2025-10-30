@@ -134,8 +134,8 @@ struct Record {
   uint32_t timestamp_ns_low = 0;
 
   // [adrian] shouldn't this be 64 bit?
-  uint64_t thread_id = 0;
-  //uint32_t thread_id = 0;
+  //uint64_t thread_id = 0;
+  uint32_t thread_id = 0;
 
   union {
     // Only one of the two elements can be zero initialized, clang complains

@@ -275,6 +275,7 @@ if (enable_perfetto_trace_processor_sqlite) {
         data_deps += [ "../profiling/symbolizer:llvm_symbolizer_wrapper" ]
       }
     }
+    ldflags = [ "-lpthread" ]
   }
 
   # Shell target which does not link all the extra libraryes linked by
@@ -287,6 +288,7 @@ if (enable_perfetto_trace_processor_sqlite) {
       "../base",
     ]
     sources = [ "minimal_shell.cc" ]
+    ldflags = [ "-lpthread" ]
   }
 }  # if (enable_perfetto_trace_processor_sqlite)
 
