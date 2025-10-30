@@ -87,14 +87,14 @@ SysStatsDataSource::SysStatsDataSource(
   ns_per_user_hz_ = 1000000000ull / static_cast<uint64_t>(sysconf(_SC_CLK_TCK));
 
   open_fn = open_fn ? open_fn : OpenReadOnly;
-  meminfo_fd_ = open_fn("/proc/meminfo");
-  vmstat_fd_ = open_fn("/proc/vmstat");
-  stat_fd_ = open_fn("/proc/stat");
-  buddy_fd_ = open_fn("/proc/buddyinfo");
-  diskstat_fd_ = open_fn("/proc/diskstats");
-  psi_cpu_fd_ = open_fn("/proc/pressure/cpu");
-  psi_io_fd_ = open_fn("/proc/pressure/io");
-  psi_memory_fd_ = open_fn("/proc/pressure/memory");
+  meminfo_fd_ = open_fn("/compat/linux/proc/meminfo");
+  vmstat_fd_ = open_fn("/compat/linux/proc/vmstat");
+  stat_fd_ = open_fn("/compat/linux/proc/stat");
+  buddy_fd_ = open_fn("/compat/linux/proc/buddyinfo");
+  diskstat_fd_ = open_fn("/compat/linux/proc/diskstats");
+  psi_cpu_fd_ = open_fn("/compat/linux/proc/pressure/cpu");
+  psi_io_fd_ = open_fn("/compat/linux/proc/pressure/io");
+  psi_memory_fd_ = open_fn("/compat/linux/proc/pressure/memory");
   read_buf_ = base::PagedMemory::Allocate(kReadBufSize);
 
   // Build a lookup map that allows to quickly translate strings like "MemTotal"
@@ -428,7 +428,7 @@ void SysStatsDataSource::ReadGpuFrequency(protos::pbzero::SysStats* sys_stats) {
 }
 
 void SysStatsDataSource::ReadDiskStat(protos::pbzero::SysStats* sys_stats) {
-  size_t rsize = ReadFile(&diskstat_fd_, "/proc/diskstats");
+  size_t rsize = ReadFile(&diskstat_fd_, "/compat/linux/proc/diskstats");
   if (!rsize) {
     return;
   }
@@ -523,19 +523,19 @@ void SysStatsDataSource::ReadPsi(protos::pbzero::SysStats* sys_stats) {
     }
   };
 
-  read_psi_resource(&psi_cpu_fd_, "/proc/pressure/cpu",
+  read_psi_resource(&psi_cpu_fd_, "/compat/linux/proc/pressure/cpu",
                     PsiSample::PSI_RESOURCE_CPU_SOME,
                     PsiSample::PSI_RESOURCE_CPU_FULL);
-  read_psi_resource(&psi_io_fd_, "/proc/pressure/io",
+  read_psi_resource(&psi_io_fd_, "/compat/linux/proc/pressure/io",
                     PsiSample::PSI_RESOURCE_IO_SOME,
                     PsiSample::PSI_RESOURCE_IO_FULL);
-  read_psi_resource(&psi_memory_fd_, "/proc/pressure/memory",
+  read_psi_resource(&psi_memory_fd_, "/compat/linux/proc/pressure/memory",
                     PsiSample::PSI_RESOURCE_MEMORY_SOME,
                     PsiSample::PSI_RESOURCE_MEMORY_FULL);
 }
 
 void SysStatsDataSource::ReadBuddyInfo(protos::pbzero::SysStats* sys_stats) {
-  size_t rsize = ReadFile(&buddy_fd_, "/proc/buddyinfo");
+  size_t rsize = ReadFile(&buddy_fd_, "/compat/linux/proc/buddyinfo");
   if (!rsize) {
     return;
   }
@@ -606,7 +606,7 @@ const char* SysStatsDataSource::ReadDevfreqCurFreq(
 }
 
 void SysStatsDataSource::ReadMeminfo(protos::pbzero::SysStats* sys_stats) {
-  size_t rsize = ReadFile(&meminfo_fd_, "/proc/meminfo");
+  size_t rsize = ReadFile(&meminfo_fd_, "/compat/linux/proc/meminfo");
   if (!rsize)
     return;
   char* buf = static_cast<char*>(read_buf_.Get());
@@ -630,7 +630,7 @@ void SysStatsDataSource::ReadMeminfo(protos::pbzero::SysStats* sys_stats) {
 }
 
 void SysStatsDataSource::ReadVmstat(protos::pbzero::SysStats* sys_stats) {
-  size_t rsize = ReadFile(&vmstat_fd_, "/proc/vmstat");
+  size_t rsize = ReadFile(&vmstat_fd_, "/compat/linux/proc/vmstat");
   if (!rsize)
     return;
   char* buf = static_cast<char*>(read_buf_.Get());
@@ -652,7 +652,7 @@ void SysStatsDataSource::ReadVmstat(protos::pbzero::SysStats* sys_stats) {
 }
 
 void SysStatsDataSource::ReadStat(protos::pbzero::SysStats* sys_stats) {
-  size_t rsize = ReadFile(&stat_fd_, "/proc/stat");
+  size_t rsize = ReadFile(&stat_fd_, "/compat/linux/proc/stat");
   if (!rsize)
     return;
   char* buf = static_cast<char*>(read_buf_.Get());

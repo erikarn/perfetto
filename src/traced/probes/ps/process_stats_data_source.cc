@@ -442,7 +442,6 @@ void ProcessStatsDataSource::WriteDetailedThread(
 }
 
 const char* ProcessStatsDataSource::GetProcMountpoint() {
-  printf("%s: called\n", __func__);
   static constexpr char kDefaultProcMountpoint[] = "/compat/linux/proc";
   return kDefaultProcMountpoint;
 }
