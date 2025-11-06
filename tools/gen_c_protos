@@ -40,6 +40,8 @@ SOURCE_FILES = [
             'protos/perfetto/trace/track_event/debug_annotation.proto',
             'protos/perfetto/trace/track_event/track_descriptor.proto',
             'protos/perfetto/trace/track_event/track_event.proto',
+            'protos/perfetto/common/sys_stats_counters.proto',
+            'protos/perfetto/trace/sys_stats/sys_stats.proto',
         ],
         'guard_strip_prefix': 'PROTOS_PERFETTO_',
         'guard_add_prefix': 'INCLUDE_PERFETTO_PUBLIC_PROTOS_',
