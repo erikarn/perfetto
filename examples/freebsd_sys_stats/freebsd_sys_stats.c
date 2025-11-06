@@ -35,6 +35,9 @@ extern void populate_intrcnt_data(struct perfetto_protos_SysStats *sys_stat);
 extern void setup_disk_data(void);
 extern void populate_disk_data(struct perfetto_protos_SysStats *sys_stat);
 
+extern void setup_cpu_data(void);
+extern void populate_cpu_data(struct perfetto_protos_SysStats *sys_stat);
+
 static struct PerfettoDs custom = PERFETTO_DS_INIT();
 
 static uint64_t
@@ -58,6 +61,9 @@ int main(void) {
   /* intr setup */
   setup_intrcnt_data();
 
+  /* cpu setup */
+  setup_cpu_data();
+
   PerfettoDsRegister(&custom, "freebsd.sys_stats", PerfettoDsParamsDefault());
 
   for (;;) {
@@ -73,27 +79,10 @@ int main(void) {
 
         populate_disk_data(&sys_stats);
         populate_intrcnt_data(&sys_stats);
+        populate_cpu_data(&sys_stats);
 
         perfetto_protos_TracePacket_end_sys_stats(&root.msg, &sys_stats);
 
-#if 0
-        struct perfetto_protos_TestEvent for_testing;
-        perfetto_protos_TracePacket_begin_for_testing(&root.msg, &for_testing);
-
-        perfetto_protos_TestEvent_set_cstr_str(&for_testing,
-                                               "This is a long string");
-        {
-          struct perfetto_protos_TestEvent_TestPayload payload;
-          perfetto_protos_TestEvent_begin_payload(&for_testing, &payload);
-
-          for (int i = 0; i < 1000; i++) {
-            perfetto_protos_TestEvent_TestPayload_set_cstr_str(&payload,
-                                                               "nested");
-          }
-          perfetto_protos_TestEvent_end_payload(&for_testing, &payload);
-        }
-        perfetto_protos_TracePacket_end_for_testing(&root.msg, &for_testing);
-#endif
       }
       PerfettoDsTracerPacketEnd(&ctx, &root);
     }

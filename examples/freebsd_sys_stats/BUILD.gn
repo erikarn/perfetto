@@ -24,5 +24,5 @@ executable("freebsd_sys_stats") {
   ]
   libs = [ "geom", "devstat" ]
   sources = [ "freebsd_sys_stats.c", "freebsd_sys_stats_intr.c",
-      "freebsd_sys_stats_disk.c" ]
+      "freebsd_sys_stats_disk.c", "freebsd_sys_stats_cpu.c" ]
 }
