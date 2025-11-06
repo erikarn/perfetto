@@ -17,10 +17,12 @@
 #include <unistd.h>
 #include <time.h>
 #include <err.h>
+#include <errno.h>
 
 #include <stdio.h>
 #include <libgeom.h>
 #include <devstat.h>
+#include <sys/sysctl.h>
 
 #include "perfetto/public/data_source.h"
 #include "perfetto/public/producer.h"
@@ -34,6 +36,12 @@ struct {
     struct timespec tp, tq;
     float dt;
 } geom_info;
+
+struct {
+    uint32_t intrcnt;
+    long *intrcnts_cur;
+    long *intrcnts_prev;
+} intr_info;
 
 static struct PerfettoDs custom = PERFETTO_DS_INIT();
 
@@ -106,7 +114,7 @@ static void populate_disk_data(struct perfetto_protos_SysStats *sys_stat)
             DSM_TOTAL_BYTES_WRITE, &by_wr,
             DSM_NONE);
 
-        printf("disk: %s, sect %lu/%lu, tot %lu/%lu\n", devname, tr_rx, tr_wr, by_rx, by_wr);
+        //printf("disk: %s, sect %lu/%lu, tot %lu/%lu\n", devname, tr_rx, tr_wr, by_rx, by_wr);
 
         /* Populate a disk stat entry */
         perfetto_protos_SysStats_begin_disk_stat(sys_stat, &disk_stats);
@@ -128,18 +136,69 @@ static void populate_disk_data(struct perfetto_protos_SysStats *sys_stat)
     }
 }
 
+static void
+setup_intrcnt_data(void)
+{
+	intr_info.intrcnts_cur = calloc(sizeof(long), 131072);
+	intr_info.intrcnts_prev = calloc(sizeof(long), 131072);
+	intr_info.intrcnt = 131072;
+}
+
+static void
+populate_intrcnt_data(struct perfetto_protos_SysStats *sys_stat)
+{
+	size_t intrcntlen;
+	int ret, i;
+
+	intrcntlen = intr_info.intrcnt * sizeof(long);
+	memset(intr_info.intrcnts_cur, 0, intrcntlen);
+
+	ret = sysctlbyname("hw.intrcnt", intr_info.intrcnts_cur,
+	    &intrcntlen, NULL, 0);
+	if (ret != 0) {
+		printf("%s: sysctl failed; %d (%d)\n", __func__, ret, errno);
+		return;
+	}
+
+	for (i = 0; i < 1024; i++) {
+		long delta;
+
+		struct perfetto_protos_SysStats_InterruptCount intr_cnt;
+		/* Skip empty interrupt slots, we want cur and prev */
+		if (intr_info.intrcnts_cur[i] == 0)
+			continue;
+		if (intr_info.intrcnts_prev[i] == 0)
+			continue;
+
+		delta = intr_info.intrcnts_cur[i] - intr_info.intrcnts_prev[i];
+
+		//printf("irq %i: %llu\n", i, (unsigned long long) delta);
+
+		perfetto_protos_SysStats_begin_num_irq(sys_stat, &intr_cnt);
+		perfetto_protos_SysStats_InterruptCount_set_irq(&intr_cnt, i);
+		perfetto_protos_SysStats_InterruptCount_set_count(&intr_cnt, delta);
+		perfetto_protos_SysStats_end_num_irq(sys_stat, &intr_cnt);
+	}
+
+	memcpy(intr_info.intrcnts_prev, intr_info.intrcnts_cur,
+	    intr_info.intrcnt * sizeof(long));
+}
+
 int main(void) {
   struct PerfettoProducerInitArgs args = PERFETTO_PRODUCER_INIT_ARGS_INIT();
   args.backends = PERFETTO_BACKEND_SYSTEM;
   PerfettoProducerInit(args);
 
+  /* XXX TODO: migrate to a setup_diskstats() routine */
   /* GEOM for disk stats */
   geom_gettree(&geom_info.gmp);
   geom_stats_open();
-
   /* Get initial disk snapshot */
   geom_info.sq = geom_stats_snapshot_get();
   geom_stats_snapshot_timestamp(geom_info.sq, &geom_info.tq);
+
+  /* intr setup */
+  setup_intrcnt_data();
 
   PerfettoDsRegister(&custom, "freebsd.sys_stats", PerfettoDsParamsDefault());
 
@@ -155,6 +214,7 @@ int main(void) {
         perfetto_protos_TracePacket_begin_sys_stats(&root.msg, &sys_stats);
 
         populate_disk_data(&sys_stats);
+        populate_intrcnt_data(&sys_stats);
 
         perfetto_protos_TracePacket_end_sys_stats(&root.msg, &sys_stats);
 
