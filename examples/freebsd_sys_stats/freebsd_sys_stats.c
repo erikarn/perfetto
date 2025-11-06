@@ -86,8 +86,8 @@ int main(void) {
       }
       PerfettoDsTracerPacketEnd(&ctx, &root);
     }
-    // 100ms sleep
-    usleep(100 * 1000);
+    // 10ms sleep
+    usleep(10 * 1000);
     //sleep(1);
   }
 }
