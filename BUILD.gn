@@ -137,6 +137,7 @@ if (enable_perfetto_integration_tests) {
   if (!is_win && !is_mac) {
     all_targets += [
       "examples/shared_lib:example_shlib_data_source",
+      "examples/freebsd_sys_stats:freebsd_sys_stats",
       "examples/shared_lib:example_shlib_track_event",
     ]
   }
