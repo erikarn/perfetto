@@ -29,6 +29,9 @@
 #include "perfetto/public/protos/trace/sys_stats/sys_stats.pzc.h"
 #include "perfetto/public/protos/trace/trace_packet.pzc.h"
 
+extern void setup_intrcnt_data(void);
+extern void populate_intrcnt_data(struct perfetto_protos_SysStats *sys_stat);
+
 struct {
     struct gmesh gmp;
     struct devstat *gsp, *gsq;
@@ -36,12 +39,6 @@ struct {
     struct timespec tp, tq;
     float dt;
 } geom_info;
-
-struct {
-    uint32_t intrcnt;
-    long *intrcnts_cur;
-    long *intrcnts_prev;
-} intr_info;
 
 static struct PerfettoDs custom = PERFETTO_DS_INIT();
 
@@ -134,54 +131,6 @@ static void populate_disk_data(struct perfetto_protos_SysStats *sys_stat)
         *geom_info.gsq = *geom_info.gsp;
         geom_stats_snapshot_free(geom_info.sp);
     }
-}
-
-static void
-setup_intrcnt_data(void)
-{
-	intr_info.intrcnts_cur = calloc(sizeof(long), 131072);
-	intr_info.intrcnts_prev = calloc(sizeof(long), 131072);
-	intr_info.intrcnt = 131072;
-}
-
-static void
-populate_intrcnt_data(struct perfetto_protos_SysStats *sys_stat)
-{
-	size_t intrcntlen;
-	int ret, i;
-
-	intrcntlen = intr_info.intrcnt * sizeof(long);
-	memset(intr_info.intrcnts_cur, 0, intrcntlen);
-
-	ret = sysctlbyname("hw.intrcnt", intr_info.intrcnts_cur,
-	    &intrcntlen, NULL, 0);
-	if (ret != 0) {
-		printf("%s: sysctl failed; %d (%d)\n", __func__, ret, errno);
-		return;
-	}
-
-	for (i = 0; i < 1024; i++) {
-		long delta;
-
-		struct perfetto_protos_SysStats_InterruptCount intr_cnt;
-		/* Skip empty interrupt slots, we want cur and prev */
-		if (intr_info.intrcnts_cur[i] == 0)
-			continue;
-		if (intr_info.intrcnts_prev[i] == 0)
-			continue;
-
-		delta = intr_info.intrcnts_cur[i] - intr_info.intrcnts_prev[i];
-
-		//printf("irq %i: %llu\n", i, (unsigned long long) delta);
-
-		perfetto_protos_SysStats_begin_num_irq(sys_stat, &intr_cnt);
-		perfetto_protos_SysStats_InterruptCount_set_irq(&intr_cnt, i);
-		perfetto_protos_SysStats_InterruptCount_set_count(&intr_cnt, delta);
-		perfetto_protos_SysStats_end_num_irq(sys_stat, &intr_cnt);
-	}
-
-	memcpy(intr_info.intrcnts_prev, intr_info.intrcnts_cur,
-	    intr_info.intrcnt * sizeof(long));
 }
 
 int main(void) {
