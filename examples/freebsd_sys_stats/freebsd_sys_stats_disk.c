@@ -42,6 +42,11 @@
  * record for transfer amount in bytes? So we can populate that,
  * and then teach the trace processor to believe that from us
  * rather than synthesise it.
+ *
+ * The synthesized read/write values look a bit trash; please do
+ * a deeper dive into the correctness of these values and
+ * that they match what the linux provider is getting from
+ * /proc/diskstats .
  */
 
 struct {
