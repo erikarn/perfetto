@@ -29,6 +29,21 @@
 #include "perfetto/public/protos/trace/sys_stats/sys_stats.pzc.h"
 #include "perfetto/public/protos/trace/trace_packet.pzc.h"
 
+/*
+ * TODO!
+ *
+ * The trace analyser assumes a linux-ism that /proc/diskstats always
+ * uses 512 byte sector sizes - so for non-512 byte platforms we need
+ * to re-normalise them to 512 sector counts before we push it up.
+ *
+ * Are "discards" in linux procstat the same as _FREE in devstat?
+ *
+ * Maybe see if we can add an optional field to the perfetto trace
+ * record for transfer amount in bytes? So we can populate that,
+ * and then teach the trace processor to believe that from us
+ * rather than synthesise it.
+ */
+
 struct {
     struct gmesh gmp;
     struct devstat *gsp, *gsq;
@@ -44,6 +59,7 @@ populate_disk_data(struct perfetto_protos_SysStats *sys_stat)
     char devname[4096];
     uint64_t q_len;
     uint64_t tr_rx, tr_wr, by_rx, by_wr;
+    long double du_rx, du_wr;
 
     geom_info.sp = geom_stats_snapshot_get();
     if (geom_info.sp == NULL) /* XXX error */
@@ -91,22 +107,26 @@ populate_disk_data(struct perfetto_protos_SysStats *sys_stat)
         /* calculate statistics over the interval */
         devstat_compute_statistics(geom_info.gsp, NULL, geom_info.dt,
             DSM_QUEUE_LENGTH, &q_len,
-            DSM_TOTAL_TRANSFERS_READ, &tr_rx,
+            DSM_TOTAL_BLOCKS_READ, &tr_rx,
+            DSM_TOTAL_DURATION_READ, &du_rx,
             DSM_TOTAL_BYTES_READ, &by_rx,
-            DSM_TOTAL_TRANSFERS_WRITE, &tr_wr,
+            DSM_TOTAL_BLOCKS_WRITE, &tr_wr,
+            DSM_TOTAL_DURATION_WRITE, &du_wr,
             DSM_TOTAL_BYTES_WRITE, &by_wr,
             DSM_NONE);
 
-        //printf("disk: %s, sect %lu/%lu, tot %lu/%lu\n", devname, tr_rx, tr_wr, by_rx, by_wr);
+        //printf("disk: %s, sect read/write %lu/%lu, bytes read/write %lu/%lu, dur %Lf/%Lf\n", devname, tr_rx, tr_wr, by_rx, by_wr, du_rx, du_wr);
 
         /* Populate a disk stat entry */
         perfetto_protos_SysStats_begin_disk_stat(sys_stat, &disk_stats);
 
         perfetto_protos_SysStats_DiskStat_set_device_name(&disk_stats, devname, strlen(devname));
         perfetto_protos_SysStats_DiskStat_set_read_sectors(&disk_stats, tr_rx);
-        /* todo: read_time_ms */
-        perfetto_protos_SysStats_DiskStat_set_write_sectors(&disk_stats, tr_wr);
-        /* todo: write_time_ms */
+        perfetto_protos_SysStats_DiskStat_set_read_time_ms(&disk_stats,
+	    (uint64_t) (du_rx * 1000));
+        perfetto_protos_SysStats_DiskStat_set_write_sectors(&disk_stats,tr_wr);
+        perfetto_protos_SysStats_DiskStat_set_write_time_ms(&disk_stats,
+	    (uint64_t) (du_wr * 1000));
         /* todo: discard_sectors */
         /* todo: discard_time_ms */
         /* todo: flush_count */
