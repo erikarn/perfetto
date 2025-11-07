@@ -147,11 +147,6 @@ populate_cpu_data(struct perfetto_protos_SysStats *sys_stat)
 		    fetch_cp_time_delta(i, CP_INTR));
 #endif
 
-		/*
-		 * TODO: are these in units of CLOCKS_PER_SEC (128Hz) ?
-		 * How do I convert these to nanosecond values?
-		 */
-
 		/* user_ns */
 		delta = fetch_cp_time_delta(i, CP_USER);
 		perfetto_protos_SysStats_CpuTimes_set_user_ns(&cpu_cnt, delta);
