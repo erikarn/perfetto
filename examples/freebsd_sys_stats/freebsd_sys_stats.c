@@ -88,6 +88,7 @@ int main(void) {
     }
     // 10ms sleep
     usleep(10 * 1000);
+    //usleep(500 * 1000);
     //sleep(1);
   }
 }
