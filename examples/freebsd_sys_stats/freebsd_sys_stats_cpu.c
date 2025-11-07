@@ -18,6 +18,8 @@
 #include <time.h>
 #include <err.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include <stdio.h>
 #include <libgeom.h>
@@ -29,6 +31,15 @@
 #include "perfetto/public/producer.h"
 #include "perfetto/public/protos/trace/sys_stats/sys_stats.pzc.h"
 #include "perfetto/public/protos/trace/trace_packet.pzc.h"
+
+/*
+ * TODO:
+ *
+ * Don't keep reading the list of per-CPU C states each time;
+ * read them once during setup and store them globally!
+ *
+ * TODO: we only support 64 CPUs here (u_long mask)!
+ */
 
 struct {
 	int maxcpu;
@@ -219,5 +230,92 @@ populate_cpu_freq_data(struct perfetto_protos_SysStats *sys_stat)
 		// There's no key, just add for each CPU
 		perfetto_protos_SysStats_set_cpufreq_khz(sys_stat, freq * 1000);
 #endif
+	}
+}
+
+/*
+ * Note: this requires some kernel work to support, stay tuned.
+ */
+void
+populate_cpu_freq_idle(struct perfetto_protos_SysStats *sys_stat)
+{
+	char cpu_string[128];
+	char result[128];
+	char *c, *r, *cc, *rr;
+	/* XXX hard-coded limit of 8 ACPI states here! */
+	char cpu_methods[8][64];
+	size_t size;
+	int ret, i, j;
+
+	(void) sys_stat;
+
+	for (i = 0; i <= cpu_info.maxid; i++) {
+		struct perfetto_protos_SysStats_CpuIdleState cpuidle;
+
+		snprintf(cpu_string, sizeof(cpu_string),
+		    "dev.cpu.%d.cx_method", i);
+
+		/* Fetch the list of sleep state methods */
+		size = sizeof(result);
+		ret = sysctlbyname(cpu_string, &result, &size, NULL, 0);
+		if (ret != 0)
+			continue;
+
+		/* Iterate over, space separated */
+		r = result;
+		j = 0;
+		while ((c = strsep(&r, " ")) != NULL && j < 8) {
+			/* Strip out everything after / */
+			rr = c;
+			cc = strsep(&rr, "/");
+//			printf("cpu %d label %s\n", i, cc);
+			snprintf(cpu_methods[j], 64, "%s", cc);
+			j++;
+		}
+
+		/* Ok, fetch the counters */
+
+		snprintf(cpu_string, sizeof(cpu_string),
+		    "dev.cpu.%d.cx_duration_counters", i);
+
+		/* Fetch the list of sleep state methods */
+		size = sizeof(result);
+		ret = sysctlbyname(cpu_string, &result, &size, NULL, 0);
+		if (ret != 0)
+			continue;
+
+		perfetto_protos_SysStats_begin_cpuidle_state(sys_stat,
+		    &cpuidle);
+		perfetto_protos_SysStats_CpuIdleState_set_cpu_id(&cpuidle, i);
+
+		/* Iterate over, space separated */
+		r = result;
+		j = 0;
+		while ((c = strsep(&r, " ")) != NULL && j < 8) {
+			uintmax_t val = 0;
+
+			val = strtoull(c, NULL, 0);
+
+			/* Note: this API sucks for error handling */
+			if (val == ULLONG_MAX)
+				continue;
+			struct perfetto_protos_SysStats_CpuIdleStateEntry cpuentry;
+			perfetto_protos_SysStats_CpuIdleState_begin_cpuidle_state_entry(&cpuidle, &cpuentry);
+
+			/* Strip out everything after / */
+			rr = c;
+			cc = strsep(&rr, "/");
+//			printf("cpu %d %s:%ju \n", i, cpu_methods[j], val);
+
+			perfetto_protos_SysStats_CpuIdleStateEntry_set_state(&cpuentry, cpu_methods[j], strlen(cpu_methods[j]));
+			perfetto_protos_SysStats_CpuIdleStateEntry_set_duration_us(&cpuentry, (uint64_t) val);
+			perfetto_protos_SysStats_CpuIdleState_end_cpuidle_state_entry(&cpuidle, &cpuentry);
+
+			j++;
+		}
+
+		perfetto_protos_SysStats_end_cpuidle_state(sys_stat,
+		    &cpuidle);
+
 	}
 }
