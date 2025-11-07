@@ -37,7 +37,7 @@ struct {
 	int times_size;
 	u_long mask;
 	int maxid;
-	bool have_prev;
+	bool have_prev; /* TODO: need to clear this between runs */
 } cpu_info;
 
 void
@@ -174,4 +174,50 @@ skip:
 	cpu_info.have_prev = true;
 }
 
+void
+populate_cpu_freq_data(struct perfetto_protos_SysStats *sys_stat)
+{
+	char cpu_string[1024];
+	size_t size;
+	uint32_t freq;
+	int ret, i;
 
+	for (i = 0; i <= cpu_info.maxid; i++) {
+		struct perfetto_protos_SysStats_DevfreqValue devfreq;
+		(void) devfreq;
+
+		snprintf(cpu_string, sizeof(cpu_string),
+		    "dev.cpu.%d.freq", i);
+
+		size = sizeof(freq);
+		ret = sysctlbyname(cpu_string, &freq, &size, NULL, 0);
+
+		/* This array isn't key/value; we have to populate them */
+		if (ret != 0)
+			freq = 0;
+
+		/*
+		 * TODO: doing this for the CPU frequency works, but it
+		 * doesn't get special treatment in the perfetto UI.
+		 * However it's worth doing it for OTHER devices!
+		 */
+#if 0
+		perfetto_protos_SysStats_begin_devfreq(sys_stat, &devfreq);
+
+		/* XXX TODO: what should the format of this be? */
+		snprintf(cpu_string, sizeof(cpu_string), "cpu%d", i);
+
+		perfetto_protos_SysStats_DevfreqValue_set_key(&devfreq,
+		    cpu_string, strlen(cpu_string));
+
+		/* Note: freebsd returns MHz, perfetto wants KHz */
+		perfetto_protos_SysStats_DevfreqValue_set_value(&devfreq,
+		    ((uint64_t) freq) * 1000);
+
+		perfetto_protos_SysStats_end_devfreq(sys_stat, &devfreq);
+#else
+		// There's no key, just add for each CPU
+		perfetto_protos_SysStats_set_cpufreq_khz(sys_stat, freq * 1000);
+#endif
+	}
+}
