@@ -38,6 +38,7 @@ extern void populate_disk_data(struct perfetto_protos_SysStats *sys_stat);
 extern void setup_cpu_data(void);
 extern void populate_cpu_data(struct perfetto_protos_SysStats *sys_stat);
 extern void populate_cpu_freq_data(struct perfetto_protos_SysStats *sys_stat);
+extern void populate_cpu_freq_idle(struct perfetto_protos_SysStats *sys_stat);
 
 static struct PerfettoDs custom = PERFETTO_DS_INIT();
 
@@ -82,6 +83,7 @@ int main(void) {
         populate_intrcnt_data(&sys_stats);
         populate_cpu_data(&sys_stats);
         populate_cpu_freq_data(&sys_stats);
+        populate_cpu_freq_idle(&sys_stats);
 
         perfetto_protos_TracePacket_end_sys_stats(&root.msg, &sys_stats);
 
