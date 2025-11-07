@@ -90,9 +90,9 @@ int main(void) {
       }
       PerfettoDsTracerPacketEnd(&ctx, &root);
     }
-    // 10ms sleep
-    usleep(10 * 1000);
-    //usleep(500 * 1000);
+    // 100ms sleep
+    usleep(100 * 1000);
+    //usleep(250 * 1000);
     //sleep(1);
   }
 }
