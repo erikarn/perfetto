@@ -84,6 +84,19 @@ setup_cpu_data(void)
 	}
 }
 
+static unsigned long
+fetch_cp_time_delta(int cpu, int which)
+{
+	unsigned long delta;
+
+	delta = cpu_info.times[cpu * CPUSTATES + which] -
+	    cpu_info.last_cp_times[cpu * CPUSTATES + which];
+
+	delta = (delta * 1000000000ULL) / CLOCKS_PER_SEC;
+
+	return (delta);
+}
+
 void
 populate_cpu_data(struct perfetto_protos_SysStats *sys_stat)
 {
@@ -112,44 +125,46 @@ populate_cpu_data(struct perfetto_protos_SysStats *sys_stat)
 
 		/* cpu_id */
 		perfetto_protos_SysStats_CpuTimes_set_cpu_id(&cpu_cnt, i);
-		//printf("cpu: %d\n", i);
+
+#if 0
+		printf("cpu %d: idle=%ld, user=%ld, nice=%ld, system=%ld, intr=%ld\n",
+		    i,
+		    fetch_cp_time_delta(i, CP_IDLE),
+		    fetch_cp_time_delta(i, CP_USER),
+		    fetch_cp_time_delta(i, CP_NICE),
+		    fetch_cp_time_delta(i, CP_SYS),
+		    fetch_cp_time_delta(i, CP_INTR));
+#endif
 
 		/*
-		 * TODO: these are actually values between 0..100; we'll need
-		 * to convert it to nanoseconds based on the polling interval.
+		 * TODO: are these in units of CLOCKS_PER_SEC (128Hz) ?
+		 * How do I convert these to nanosecond values?
 		 */
 
-		delta = cpu_info.times[i * CPUSTATES + CP_USER] -
-		     cpu_info.last_cp_times[i * CPUSTATES + CP_USER];
-
 		/* user_ns */
+		delta = fetch_cp_time_delta(i, CP_USER);
 		perfetto_protos_SysStats_CpuTimes_set_user_ns(&cpu_cnt, delta);
 
 		/* user_nice_ns */
-		delta = cpu_info.times[i * CPUSTATES + CP_NICE] -
-		     cpu_info.last_cp_times[i * CPUSTATES + CP_NICE];
+		delta = fetch_cp_time_delta(i, CP_NICE);
 		perfetto_protos_SysStats_CpuTimes_set_user_nice_ns(&cpu_cnt, delta);
 
 		/* system_mode_ns */
-		delta = cpu_info.times[i * CPUSTATES + CP_SYS] -
-		     cpu_info.last_cp_times[i * CPUSTATES + CP_SYS];
+		delta = fetch_cp_time_delta(i, CP_SYS);
 		perfetto_protos_SysStats_CpuTimes_set_system_mode_ns(&cpu_cnt, delta);
 
 		/* idle_ns */
-		delta = cpu_info.times[i * CPUSTATES + CP_IDLE] -
-		     cpu_info.last_cp_times[i * CPUSTATES + CP_IDLE];
+		delta = fetch_cp_time_delta(i, CP_IDLE);
 		perfetto_protos_SysStats_CpuTimes_set_idle_ns(&cpu_cnt, delta);
 
 		/* io_wait_ns */
 
 		/* irq_ns */
-		delta = cpu_info.times[i * CPUSTATES + CP_INTR] -
-		     cpu_info.last_cp_times[i * CPUSTATES + CP_INTR];
+		delta = fetch_cp_time_delta(i, CP_INTR);
 		perfetto_protos_SysStats_CpuTimes_set_irq_ns(&cpu_cnt, delta);
 
 		/* softirq_ns */
 		/* steal_ns */
-
 
 		perfetto_protos_SysStats_end_cpu_stat(sys_stat, &cpu_cnt);
 	}
