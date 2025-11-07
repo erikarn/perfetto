@@ -55,6 +55,7 @@ PROD_FILES = [
     'protos/perfetto/trace/track_event/track_event.proto',
     'protos/perfetto/common/sys_stats_counters.proto',
     'protos/perfetto/trace/sys_stats/sys_stats.proto',
+    'protos/perfetto/trace/system_info/cpu_info.proto',
 ]
 
 TEST_FILES = [
