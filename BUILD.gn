@@ -133,6 +133,7 @@ if (enable_perfetto_integration_tests) {
     all_targets += [
       "examples/shared_lib:example_shlib_data_source",
       "examples/freebsd_sys_stats:freebsd_sys_stats",
+      "examples/freebsd_sys_info:freebsd_sys_info",
       "examples/shared_lib:example_shlib_track_event",
     ]
   }
