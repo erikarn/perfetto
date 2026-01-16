@@ -22,7 +22,14 @@ executable("freebsd_sys_stats") {
     "../../gn:default_deps",
     "../../src/shared_lib:libperfetto_c",
   ]
-  libs = [ "geom", "devstat" ]
-  sources = [ "freebsd_sys_stats.c", "freebsd_sys_stats_intr.c",
-      "freebsd_sys_stats_disk.c", "freebsd_sys_stats_cpu.c" ]
+  libs = [
+    "geom",
+    "devstat",
+  ]
+  sources = [
+    "freebsd_sys_stats.c",
+    "freebsd_sys_stats_cpu.c",
+    "freebsd_sys_stats_disk.c",
+    "freebsd_sys_stats_intr.c",
+  ]
 }

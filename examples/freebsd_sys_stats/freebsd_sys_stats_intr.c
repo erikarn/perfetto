@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-#include <time.h>
 #include <err.h>
 #include <errno.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <stdio.h>
-#include <libgeom.h>
 #include <devstat.h>
+#include <libgeom.h>
+#include <stdio.h>
 #include <sys/sysctl.h>
 
 #include "perfetto/public/data_source.h"
@@ -30,55 +30,51 @@
 #include "perfetto/public/protos/trace/trace_packet.pzc.h"
 
 struct {
-    uint32_t intrcnt;
-    long *intrcnts_cur;
-    long *intrcnts_prev;
+  uint32_t intrcnt;
+  long* intrcnts_cur;
+  long* intrcnts_prev;
 } intr_info;
 
-void
-setup_intrcnt_data(void)
-{
-	intr_info.intrcnts_cur = calloc(sizeof(long), 131072);
-	intr_info.intrcnts_prev = calloc(sizeof(long), 131072);
-	intr_info.intrcnt = 131072;
+void setup_intrcnt_data(void) {
+  intr_info.intrcnts_cur = calloc(sizeof(long), 131072);
+  intr_info.intrcnts_prev = calloc(sizeof(long), 131072);
+  intr_info.intrcnt = 131072;
 }
 
-void
-populate_intrcnt_data(struct perfetto_protos_SysStats *sys_stat)
-{
-	size_t intrcntlen;
-	int ret, i;
+void populate_intrcnt_data(struct perfetto_protos_SysStats* sys_stat) {
+  size_t intrcntlen;
+  int ret, i;
 
-	intrcntlen = intr_info.intrcnt * sizeof(long);
-	memset(intr_info.intrcnts_cur, 0, intrcntlen);
+  intrcntlen = intr_info.intrcnt * sizeof(long);
+  memset(intr_info.intrcnts_cur, 0, intrcntlen);
 
-	ret = sysctlbyname("hw.intrcnt", intr_info.intrcnts_cur,
-	    &intrcntlen, NULL, 0);
-	if (ret != 0) {
-		printf("%s: sysctl failed; %d (%d)\n", __func__, ret, errno);
-		return;
-	}
+  ret =
+      sysctlbyname("hw.intrcnt", intr_info.intrcnts_cur, &intrcntlen, NULL, 0);
+  if (ret != 0) {
+    printf("%s: sysctl failed; %d (%d)\n", __func__, ret, errno);
+    return;
+  }
 
-	for (i = 0; i < 1024; i++) {
-		long delta;
+  for (i = 0; i < 1024; i++) {
+    long delta;
 
-		struct perfetto_protos_SysStats_InterruptCount intr_cnt;
-		/* Skip empty interrupt slots, we want cur and prev */
-		if (intr_info.intrcnts_cur[i] == 0)
-			continue;
-		if (intr_info.intrcnts_prev[i] == 0)
-			continue;
+    struct perfetto_protos_SysStats_InterruptCount intr_cnt;
+    /* Skip empty interrupt slots, we want cur and prev */
+    if (intr_info.intrcnts_cur[i] == 0)
+      continue;
+    if (intr_info.intrcnts_prev[i] == 0)
+      continue;
 
-		delta = intr_info.intrcnts_cur[i] - intr_info.intrcnts_prev[i];
+    delta = intr_info.intrcnts_cur[i] - intr_info.intrcnts_prev[i];
 
-		//printf("irq %i: %llu\n", i, (unsigned long long) delta);
+    // printf("irq %i: %llu\n", i, (unsigned long long) delta);
 
-		perfetto_protos_SysStats_begin_num_irq(sys_stat, &intr_cnt);
-		perfetto_protos_SysStats_InterruptCount_set_irq(&intr_cnt, i);
-		perfetto_protos_SysStats_InterruptCount_set_count(&intr_cnt, delta);
-		perfetto_protos_SysStats_end_num_irq(sys_stat, &intr_cnt);
-	}
+    perfetto_protos_SysStats_begin_num_irq(sys_stat, &intr_cnt);
+    perfetto_protos_SysStats_InterruptCount_set_irq(&intr_cnt, i);
+    perfetto_protos_SysStats_InterruptCount_set_count(&intr_cnt, delta);
+    perfetto_protos_SysStats_end_num_irq(sys_stat, &intr_cnt);
+  }
 
-	memcpy(intr_info.intrcnts_prev, intr_info.intrcnts_cur,
-	    intr_info.intrcnt * sizeof(long));
+  memcpy(intr_info.intrcnts_prev, intr_info.intrcnts_cur,
+         intr_info.intrcnt * sizeof(long));
 }

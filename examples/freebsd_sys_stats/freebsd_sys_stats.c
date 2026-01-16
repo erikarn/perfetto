@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-#include <time.h>
 #include <err.h>
 #include <errno.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <stdio.h>
-#include <libgeom.h>
 #include <devstat.h>
+#include <libgeom.h>
+#include <stdio.h>
 #include <sys/sysctl.h>
 
 #include "perfetto/public/data_source.h"
@@ -30,26 +30,24 @@
 #include "perfetto/public/protos/trace/trace_packet.pzc.h"
 
 extern void setup_intrcnt_data(void);
-extern void populate_intrcnt_data(struct perfetto_protos_SysStats *sys_stat);
+extern void populate_intrcnt_data(struct perfetto_protos_SysStats* sys_stat);
 
 extern void setup_disk_data(void);
-extern void populate_disk_data(struct perfetto_protos_SysStats *sys_stat);
+extern void populate_disk_data(struct perfetto_protos_SysStats* sys_stat);
 
 extern void setup_cpu_data(void);
-extern void populate_cpu_data(struct perfetto_protos_SysStats *sys_stat);
-extern void populate_cpu_freq_data(struct perfetto_protos_SysStats *sys_stat);
-extern void populate_cpu_freq_idle(struct perfetto_protos_SysStats *sys_stat);
+extern void populate_cpu_data(struct perfetto_protos_SysStats* sys_stat);
+extern void populate_cpu_freq_data(struct perfetto_protos_SysStats* sys_stat);
+extern void populate_cpu_freq_idle(struct perfetto_protos_SysStats* sys_stat);
 
 static struct PerfettoDs custom = PERFETTO_DS_INIT();
 
-static uint64_t
-get_current_time_ns(void)
-{
-	struct timespec ts;
+static uint64_t get_current_time_ns(void) {
+  struct timespec ts;
 
-	(void) clock_gettime(CLOCK_BOOTTIME, &ts);
+  (void)clock_gettime(CLOCK_BOOTTIME, &ts);
 
-	return (((uint64_t) ts.tv_sec * 1000000000ULL) + ts.tv_nsec);
+  return (((uint64_t)ts.tv_sec * 1000000000ULL) + ts.tv_nsec);
 }
 
 int main(void) {
@@ -73,7 +71,8 @@ int main(void) {
       struct PerfettoDsRootTracePacket root;
       PerfettoDsTracerPacketBegin(&ctx, &root);
 
-      perfetto_protos_TracePacket_set_timestamp(&root.msg, get_current_time_ns());
+      perfetto_protos_TracePacket_set_timestamp(&root.msg,
+                                                get_current_time_ns());
       {
         struct perfetto_protos_SysStats sys_stats;
 
@@ -86,13 +85,12 @@ int main(void) {
         populate_cpu_freq_idle(&sys_stats);
 
         perfetto_protos_TracePacket_end_sys_stats(&root.msg, &sys_stats);
-
       }
       PerfettoDsTracerPacketEnd(&ctx, &root);
     }
     // 100ms sleep
     usleep(100 * 1000);
-    //usleep(250 * 1000);
-    //sleep(1);
+    // usleep(250 * 1000);
+    // sleep(1);
   }
 }

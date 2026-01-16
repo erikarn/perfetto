@@ -22,6 +22,12 @@ executable("freebsd_sys_info") {
     "../../gn:default_deps",
     "../../src/shared_lib:libperfetto_c",
   ]
-  libs = [ "geom", "devstat" ]
-  sources = [ "freebsd_sys_info.c", "freebsd_sys_info_cpu.c" ]
+  libs = [
+    "geom",
+    "devstat",
+  ]
+  sources = [
+    "freebsd_sys_info.c",
+    "freebsd_sys_info_cpu.c",
+  ]
 }
